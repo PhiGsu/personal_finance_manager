@@ -10,7 +10,7 @@ Personal Finance Manager is a mobile app designed to help users efficiently mana
 `cd personal-finance-manager`
 3. Install dependencies<br>
 `flutter pub get`
-4. Run the project
+4. Run the project<br>
 `flutter run`
 
 ## Members
