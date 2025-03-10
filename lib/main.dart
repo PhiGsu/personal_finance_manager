@@ -60,7 +60,7 @@ class FinanceMangerAppDrawer extends StatelessWidget {
             title: const Text('Spending Analysis'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.push(
+              Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
                       builder: (context) => SpendingAnalysisScreen()));
@@ -71,7 +71,7 @@ class FinanceMangerAppDrawer extends StatelessWidget {
             title: const Text('Transaction Log'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.push(
+              Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
                       builder: (context) => TransactionLogScreen()));
@@ -82,7 +82,7 @@ class FinanceMangerAppDrawer extends StatelessWidget {
             title: const Text('Goal Tracker'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.push(
+              Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
                       builder: (context) => GoalTrackerScreen()));
