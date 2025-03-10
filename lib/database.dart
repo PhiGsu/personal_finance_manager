@@ -53,6 +53,17 @@ class DatabaseHelper {
         FOREIGN KEY (category_id) REFERENCES Category(id)
       );
       ''');
+    
+    // Default Categories
+    await db.insert('Category', {'name': 'Income'});
+    await db.insert('Category', {'name': 'Debt'});
+    await db.insert('Category', {'name': 'Food'});
+    await db.insert('Category', {'name': 'Rent'});
+    await db.insert('Category', {'name': 'Entertainment'});
+    await db.insert('Category', {'name': 'Utilities'});
+    await db.insert('Category', {'name': 'Health'});
+    await db.insert('Category', {'name': 'Shopping'});
+    await db.insert('Category', {'name': 'Miscellaneous'});
   }
 
   // Helper methods
