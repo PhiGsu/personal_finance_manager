@@ -1,4 +1,5 @@
 import 'package:path/path.dart';
+import 'package:personal_finance_manager/models/user_transaction.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -53,7 +54,7 @@ class DatabaseHelper {
         FOREIGN KEY (category_id) REFERENCES Category(id)
       );
       ''');
-    
+
     // Default Categories
     await db.insert('Category', {'name': 'Income'});
     await db.insert('Category', {'name': 'Debt'});
@@ -120,5 +121,36 @@ class DatabaseHelper {
       where: 'id = ?',
       whereArgs: [id],
     );
+  }
+
+  // Returns categories with its id as the key and its name as the value
+  Future<Map<int, String>> getCategories() async {
+    Database db = await instance.database;
+    Map<int, String> categories = {};
+
+    final List<Map<String, dynamic>> results = await db.query('Category');
+    for (var category in results) {
+      categories[category['id']] = category['name'];
+    }
+    return categories;
+  }
+
+  // Returns transactions sorted by date descending
+  Future<List<UserTransaction>> getTransactions() async {
+    Database db = await instance.database;
+    final List<Map<String, dynamic>> results = await db.query(
+      'Transaction',
+      orderBy: 'date DESC',
+    );
+
+    return results
+        .map((transaction) => UserTransaction(
+              id: transaction['id'],
+              date: DateTime.parse(transaction['date']),
+              cost: transaction['cost'],
+              description: transaction['description'] ?? '',
+              categoryId: transaction['category_id'] ?? 0,
+            ))
+        .toList();
   }
 }

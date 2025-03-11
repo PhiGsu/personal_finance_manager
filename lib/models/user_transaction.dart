@@ -1,16 +1,16 @@
-class Transaction {
-  final int id;
+class UserTransaction {
+  final int? id;
   final DateTime date;
   final double cost;
   final String description;
   final int categoryId;
 
-  Transaction({
-    required this.id,
+  UserTransaction({
     required this.date,
     required this.cost,
     required this.description,
     required this.categoryId,
+    this.id,
   });
 
   // Used to simplify insertions into the database
