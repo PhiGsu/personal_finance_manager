@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:personal_finance_manager/database.dart';
 import 'package:personal_finance_manager/main.dart';
 import 'package:personal_finance_manager/models/user_transaction.dart';
@@ -14,9 +15,6 @@ class _TransactionLogScreenState extends State<TransactionLogScreen> {
   Map<int, String> categories = {};
   List<UserTransaction> transactions = [];
 
-  final TextEditingController costController = TextEditingController();
-  final TextEditingController descriptionController = TextEditingController();
-
   @override
   void initState() {
     super.initState();
@@ -25,7 +23,10 @@ class _TransactionLogScreenState extends State<TransactionLogScreen> {
 
   void _loadData() async {
     // Make concurrent calls
-    final results = await Future.wait([DatabaseHelper.instance.getCategories(), DatabaseHelper.instance.getTransactions()]);
+    final results = await Future.wait([
+      DatabaseHelper.instance.getCategories(),
+      DatabaseHelper.instance.getTransactions(),
+    ]);
 
     setState(() {
       categories = results[0] as Map<int, String>;
@@ -35,9 +36,10 @@ class _TransactionLogScreenState extends State<TransactionLogScreen> {
 
   Future<void> _saveTransaction(UserTransaction transaction) async {
     await DatabaseHelper.instance.insert('Transaction', transaction.toMap());
+    final updatedTransactions = await DatabaseHelper.instance.getTransactions();
 
-    setState(() async {
-      transactions = await DatabaseHelper.instance.getTransactions();
+    setState(() {
+      transactions = updatedTransactions;
     });
   }
 
@@ -91,10 +93,36 @@ class TransactionForm extends StatefulWidget {
 }
 
 class _TransactionFormState extends State<TransactionForm> {
-  final TextEditingController costController = TextEditingController();
-  final TextEditingController descriptionController = TextEditingController();
+  late final TextEditingController costController;
+  late final TextEditingController descriptionController;
   DateTime date = DateTime.now();
-  int selectedCategory = 1;
+  int? selectedCategory;
+
+  @override
+  void initState() {
+    super.initState();
+    costController = TextEditingController();
+    descriptionController = TextEditingController();
+    costController.addListener(_onTextChanged);
+    descriptionController.addListener(_onTextChanged);
+  }
+
+  @override
+  void dispose() {
+    costController.dispose();
+    descriptionController.dispose();
+    super.dispose();
+  }
+
+  void _onTextChanged() {
+    setState(() {});
+  }
+
+  bool _areFieldsValid() {
+    return costController.text.isNotEmpty &&
+        descriptionController.text.isNotEmpty &&
+        selectedCategory != null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -115,7 +143,14 @@ class _TransactionFormState extends State<TransactionForm> {
                         labelText: 'Cost',
                         border: OutlineInputBorder(),
                       ),
-                      keyboardType: TextInputType.number,
+                      keyboardType: TextInputType.numberWithOptions(
+                        signed: true,
+                        decimal: true,
+                      ),
+                      inputFormatters: <TextInputFormatter>[
+                        FilteringTextInputFormatter.allow(
+                            RegExp(r'^-?[0-9]*(\.[0-9]{0,2})?$')),
+                      ],
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -184,17 +219,23 @@ class _TransactionFormState extends State<TransactionForm> {
                 ),
                 Expanded(child: Container()),
                 IconButton(
-                    onPressed: () {
-                      final newTransaction = UserTransaction(
-                          date: date,
-                          cost: double.parse(costController.text),
-                          description: descriptionController.text,
-                          categoryId: selectedCategory);
-                      widget.onSave(newTransaction);
-                    },
+                    onPressed: _areFieldsValid()
+                        ? () {
+                            final newTransaction = UserTransaction(
+                              date: date,
+                              cost: double.parse(costController.text),
+                              description: descriptionController.text,
+                              categoryId: selectedCategory!,
+                            );
+                            widget.onSave(newTransaction);
+                          }
+                        : null,
                     style: ButtonStyle(
-                        backgroundColor:
-                            WidgetStateProperty.all(Color(0xFFDAE8FC)),
+                        backgroundColor: WidgetStateProperty.all(
+                          _areFieldsValid()
+                              ? Color(0xFFDAE8FC)
+                              : const Color.fromARGB(255, 204, 204, 204),
+                        ),
                         shape: WidgetStateProperty.all(RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(5),
                         ))),
@@ -226,7 +267,9 @@ class TransactionTable extends StatelessWidget {
             decoration: BoxDecoration(
                 border: Border(bottom: BorderSide()),
                 borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(5), topRight: Radius.circular(5)),
+                  topLeft: Radius.circular(5),
+                  topRight: Radius.circular(5),
+                ),
                 color: Theme.of(context).colorScheme.inversePrimary),
             child: Padding(
                 padding: const EdgeInsets.all(8),
@@ -237,6 +280,7 @@ class TransactionTable extends StatelessWidget {
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: DataTable(
+              dataRowMaxHeight: double.infinity,
               columns: const <DataColumn>[
                 DataColumn(label: Text('Date')),
                 DataColumn(label: Text('Cost')),
@@ -248,7 +292,13 @@ class TransactionTable extends StatelessWidget {
                   // maybe set onLongPress to edit a transaction
                   DataCell(
                       Text(transaction.date.toIso8601String().split('T')[0])),
-                  DataCell(Text(transaction.cost.toStringAsFixed(2))),
+                  DataCell(
+                    Text(
+                      transaction.cost < 0
+                          ? '-\$${transaction.cost.abs().toStringAsFixed(2)}'
+                          : '\$${transaction.cost.toStringAsFixed(2)}',
+                    ),
+                  ),
                   DataCell(Text(transaction.description)),
                   DataCell(
                       Text(categories[transaction.categoryId] ?? 'Unknown')),
