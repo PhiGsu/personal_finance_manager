@@ -44,6 +44,66 @@ class _TransactionLogScreenState extends State<TransactionLogScreen> {
     });
   }
 
+  Future<void> _showEditDialog(UserTransaction transaction) async {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit Transaction'),
+          content: SingleChildScrollView(
+            child: TransactionForm(
+              categories: categories,
+              onSave: (updatedTransaction) async {
+                await DatabaseHelper.instance
+                    .update('UserTransaction', updatedTransaction.toMap());
+                _loadData();
+                if (context.mounted) {
+                  Navigator.of(context).pop();
+                }
+              },
+              onDelete: _showDeleteDialog,
+              editTransaction: transaction,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showDeleteDialog(UserTransaction transaction) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Delete Transaction'),
+          content:
+              const Text('Are you sure you want to delete this transaction?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                await DatabaseHelper.instance
+                    .delete('UserTransaction', transaction.id!);
+                _loadData();
+                if (context.mounted) {
+                  // Closes the confirm and edit dialogs
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pop();
+                }
+              },
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -79,6 +139,7 @@ class _TransactionLogScreenState extends State<TransactionLogScreen> {
               child: TransactionTable(
                 transactions: transactions,
                 categories: categories,
+                onEdit: _showEditDialog,
               ),
             ),
           ],
@@ -92,11 +153,15 @@ class _TransactionLogScreenState extends State<TransactionLogScreen> {
 class TransactionForm extends StatefulWidget {
   final Map<int, String> categories;
   final Function(UserTransaction) onSave;
+  final Function(UserTransaction)? onDelete;
+  final UserTransaction? editTransaction;
 
   const TransactionForm({
     super.key,
-    required this.onSave,
     required this.categories,
+    required this.onSave,
+    this.onDelete,
+    this.editTransaction,
   });
 
   @override
@@ -106,14 +171,19 @@ class TransactionForm extends StatefulWidget {
 class _TransactionFormState extends State<TransactionForm> {
   late final TextEditingController costController;
   late final TextEditingController descriptionController;
-  DateTime date = DateTime.now();
+  late DateTime date;
   int? selectedCategory;
 
   @override
   void initState() {
     super.initState();
-    costController = TextEditingController();
-    descriptionController = TextEditingController();
+    costController =
+        TextEditingController(text: widget.editTransaction?.cost.toString());
+    descriptionController =
+        TextEditingController(text: widget.editTransaction?.description);
+    date = widget.editTransaction?.date ?? DateTime.now();
+    selectedCategory = widget.editTransaction?.categoryId;
+
     costController.addListener(_onTextChanged);
     descriptionController.addListener(_onTextChanged);
   }
@@ -151,6 +221,7 @@ class _TransactionFormState extends State<TransactionForm> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(5),
         border: Border.all(),
+        color: Colors.white,
       ),
       child: Padding(
         padding: EdgeInsets.all(8),
@@ -255,29 +326,45 @@ class _TransactionFormState extends State<TransactionForm> {
               ),
               Align(
                 alignment: Alignment.centerRight,
-                child: IconButton(
-                  onPressed: _areFieldsValid()
-                      ? () {
-                          final newTransaction = UserTransaction(
-                            date: date,
-                            cost: double.parse(costController.text),
-                            description: descriptionController.text,
-                            categoryId: selectedCategory!,
-                          );
-                          widget.onSave(newTransaction);
-                          resetForm();
-                        }
-                      : null,
-                  style: ButtonStyle(
-                      backgroundColor: WidgetStateProperty.all(
-                        _areFieldsValid()
-                            ? Color(0xFFDAE8FC)
-                            : const Color.fromARGB(255, 204, 204, 204),
+                child: Row(
+                  children: [
+                    if (widget.editTransaction != null)
+                      IconButton(
+                        onPressed: () =>
+                            widget.onDelete!(widget.editTransaction!),
+                        style: ButtonStyle(
+                          backgroundColor: WidgetStatePropertyAll(Colors.red),
+                        ),
+                        icon: const Icon(Icons.delete),
                       ),
-                      shape: WidgetStateProperty.all(RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5),
-                      ))),
-                  icon: const Icon(Icons.add),
+                    IconButton(
+                      onPressed: _areFieldsValid()
+                          ? () {
+                              final newTransaction = UserTransaction(
+                                date: date,
+                                cost: double.parse(costController.text),
+                                description: descriptionController.text,
+                                categoryId: selectedCategory!,
+                                id: widget.editTransaction?.id,
+                              );
+                              widget.onSave(newTransaction);
+                              resetForm();
+                            }
+                          : null,
+                      style: ButtonStyle(
+                          backgroundColor: WidgetStateProperty.all(
+                            _areFieldsValid()
+                                ? Color(0xFFDAE8FC)
+                                : const Color.fromARGB(255, 204, 204, 204),
+                          ),
+                          shape: WidgetStateProperty.all(RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(5),
+                          ))),
+                      icon: widget.editTransaction == null
+                          ? const Icon(Icons.add)
+                          : const Icon(Icons.save),
+                    ),
+                  ],
                 ),
               ),
             ]),
@@ -292,16 +379,23 @@ class _TransactionFormState extends State<TransactionForm> {
 class TransactionTable extends StatelessWidget {
   final List<UserTransaction> transactions;
   final Map<int, String> categories;
+  final Function(UserTransaction) onEdit;
 
   const TransactionTable(
-      {super.key, required this.transactions, required this.categories});
+      {super.key,
+      required this.transactions,
+      required this.categories,
+      required this.onEdit});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(5), border: Border.all()),
+        borderRadius: BorderRadius.circular(5),
+        border: Border.all(),
+        color: Colors.white,
+      ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Container(
           alignment: Alignment.center,
@@ -332,27 +426,28 @@ class TransactionTable extends StatelessWidget {
                 DataColumn(label: Text('Category')),
               ],
               rows: transactions.map((transaction) {
-                return DataRow(cells: <DataCell>[
-                  // maybe set onLongPress to edit a transaction
-                  DataCell(
-                    Text(transaction.date.toIso8601String().split('T')[0]),
-                  ),
-                  DataCell(
-                    Text(
-                      transaction.cost < 0
-                          ? '-\$${transaction.cost.abs().toStringAsFixed(2)}'
-                          : '\$${transaction.cost.toStringAsFixed(2)}',
-                    ),
-                  ),
-                  DataCell(
-                    Container(
-                      constraints: const BoxConstraints(maxWidth: 100),
-                      child: Text(transaction.description),
-                    ),
-                  ),
-                  DataCell(
-                      Text(categories[transaction.categoryId] ?? 'Unknown')),
-                ]);
+                return DataRow(
+                    onLongPress: () => onEdit(transaction),
+                    cells: <DataCell>[
+                      DataCell(
+                        Text(transaction.date.toIso8601String().split('T')[0]),
+                      ),
+                      DataCell(
+                        Text(
+                          transaction.cost < 0
+                              ? '-\$${transaction.cost.abs().toStringAsFixed(2)}'
+                              : '\$${transaction.cost.toStringAsFixed(2)}',
+                        ),
+                      ),
+                      DataCell(
+                        Container(
+                          constraints: const BoxConstraints(maxWidth: 100),
+                          child: Text(transaction.description),
+                        ),
+                      ),
+                      DataCell(Text(
+                          categories[transaction.categoryId] ?? 'Unknown')),
+                    ]);
               }).toList(),
             ),
           ),
