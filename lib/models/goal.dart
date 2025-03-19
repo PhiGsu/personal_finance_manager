@@ -1,18 +1,16 @@
 class Goal {
-  final int id;
+  final int? id;
   final String name;
   final double targetAmount;
   final double currentAmount;
-  final DateTime dueDate;
-  final int categoryId;
+  final DateTime? dueDate;
 
   Goal({
-    required this.id,
+    this.id,
     required this.name,
     required this.targetAmount,
     required this.currentAmount,
-    required this.dueDate,
-    required this.categoryId,
+    this.dueDate,
   });
 
   // Used to simplify insertions into the database
@@ -22,8 +20,7 @@ class Goal {
       'name': name,
       'target_amount': targetAmount,
       'current_amount': currentAmount,
-      'due_date': dueDate.toIso8601String().split('T')[0],
-      'category_id': categoryId
+      'due_date': dueDate?.toIso8601String().split('T')[0],
     };
   }
 }

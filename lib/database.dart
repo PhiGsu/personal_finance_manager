@@ -1,4 +1,5 @@
 import 'package:path/path.dart';
+import 'package:personal_finance_manager/models/goal.dart';
 import 'package:personal_finance_manager/models/user_transaction.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
@@ -40,8 +41,7 @@ class DatabaseHelper {
       CREATE TABLE Category (
         id INTEGER PRIMARY KEY,
         name TEXT NOT NULL
-      );'''
-    );
+      );''');
 
     await db.execute('''
       CREATE TABLE Goal (
@@ -49,11 +49,8 @@ class DatabaseHelper {
         name TEXT NOT NULL,  
         target_amount NUMERIC NOT NULL,
         current_amount NUMERIC DEFAULT 0,
-        due_date DATE,         
-        category_id INTEGER,    
-        FOREIGN KEY (category_id) REFERENCES Category(id)
-      );'''
-    );
+        due_date DATE         
+      );''');
 
     await db.execute('''
       CREATE TABLE UserTransaction (
@@ -63,8 +60,7 @@ class DatabaseHelper {
         description TEXT,
         category_id INTEGER,
         FOREIGN KEY (category_id) REFERENCES Category(id)
-      );'''
-    );
+      );''');
 
     // Default Categories
     await db.insert('Category', {'name': 'Income'});
@@ -163,5 +159,21 @@ class DatabaseHelper {
               categoryId: transaction['category_id'] ?? 0,
             ))
         .toList();
+  }
+
+  Future<List<Goal>> getGoals() async {
+    Database db = await instance.database;
+    final List<Map<String, dynamic>> results = await db.query('Goal');
+
+    return results.map((goal) {
+      return Goal(
+        id: goal['id'],
+        name: goal['name'],
+        targetAmount: (goal['target_amount'] as num).toDouble(),
+        currentAmount: (goal['current_amount'] as num).toDouble(),
+        dueDate:
+            goal['due_date'] != null ? DateTime.parse(goal['due_date']) : null,
+      );
+    }).toList();
   }
 }
