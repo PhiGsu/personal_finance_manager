@@ -35,7 +35,8 @@ class _TransactionLogScreenState extends State<TransactionLogScreen> {
   }
 
   Future<void> _saveTransaction(UserTransaction transaction) async {
-    await DatabaseHelper.instance.insert('Transaction', transaction.toMap());
+    await DatabaseHelper.instance
+        .insert('UserTransaction', transaction.toMap());
     final updatedTransactions = await DatabaseHelper.instance.getTransactions();
 
     setState(() {
@@ -79,7 +80,7 @@ class _TransactionLogScreenState extends State<TransactionLogScreen> {
                 transactions: transactions,
                 categories: categories,
               ),
-            )
+            ),
           ],
         ),
       ),
@@ -138,7 +139,7 @@ class _TransactionFormState extends State<TransactionForm> {
   }
 
   bool _areFieldsValid() {
-    return costController.text.isNotEmpty &&
+    return double.tryParse(costController.text) != null &&
         descriptionController.text.isNotEmpty &&
         selectedCategory != null;
   }
@@ -323,6 +324,7 @@ class TransactionTable extends StatelessWidget {
                 BoxConstraints(minWidth: MediaQuery.of(context).size.width),
             child: DataTable(
               dataRowMaxHeight: double.infinity,
+              columnSpacing: 20,
               columns: const <DataColumn>[
                 DataColumn(label: Text('Date')),
                 DataColumn(label: Text('Cost')),

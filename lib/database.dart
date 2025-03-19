@@ -27,14 +27,23 @@ class DatabaseHelper {
     );
   }
 
+  // This deletes the database
+  Future<void> deleteDb() async {
+    final documentsDirectory = await getApplicationDocumentsDirectory();
+    final path = join(documentsDirectory.path, _databaseName);
+    await deleteDatabase(path);
+  }
+
   // SQL code to create the database table
   Future _onCreate(Database db, int version) async {
     await db.execute('''
       CREATE TABLE Category (
         id INTEGER PRIMARY KEY,
         name TEXT NOT NULL
-      );
+      );'''
+    );
 
+    await db.execute('''
       CREATE TABLE Goal (
         id INTEGER PRIMARY KEY,
         name TEXT NOT NULL,  
@@ -43,17 +52,19 @@ class DatabaseHelper {
         due_date DATE,         
         category_id INTEGER,    
         FOREIGN KEY (category_id) REFERENCES Category(id)
-      );
+      );'''
+    );
 
-      CREATE TABLE Transaction (
+    await db.execute('''
+      CREATE TABLE UserTransaction (
         id INTEGER PRIMARY KEY,
         date DATE,
         cost NUMERIC NOT NULL,
         description TEXT,
         category_id INTEGER,
         FOREIGN KEY (category_id) REFERENCES Category(id)
-      );
-      ''');
+      );'''
+    );
 
     // Default Categories
     await db.insert('Category', {'name': 'Income'});
@@ -139,7 +150,7 @@ class DatabaseHelper {
   Future<List<UserTransaction>> getTransactions() async {
     Database db = await instance.database;
     final List<Map<String, dynamic>> results = await db.query(
-      'Transaction',
+      'UserTransaction',
       orderBy: 'date DESC',
     );
 
@@ -147,7 +158,7 @@ class DatabaseHelper {
         .map((transaction) => UserTransaction(
               id: transaction['id'],
               date: DateTime.parse(transaction['date']),
-              cost: transaction['cost'],
+              cost: (transaction['cost'] as num).toDouble(),
               description: transaction['description'] ?? '',
               categoryId: transaction['category_id'] ?? 0,
             ))
