@@ -161,6 +161,27 @@ class DatabaseHelper {
         .toList();
   }
 
+  // Returns transactions after a certain date
+  Future<List<UserTransaction>> getTransactionsAfterDate(DateTime date) async {
+    Database db = await instance.database;
+    final List<Map<String, dynamic>> results = await db.query(
+      'UserTransaction',
+      where: 'date >= ?',
+      whereArgs: [date.toIso8601String().split('T')[0]],
+    );
+
+    return results
+        .map((transaction) => UserTransaction(
+              id: transaction['id'],
+              date: DateTime.parse(transaction['date']),
+              cost: (transaction['cost'] as num).toDouble(),
+              description: transaction['description'] ?? '',
+              categoryId: transaction['category_id'] ?? 0,
+            ))
+        .toList();
+  }
+
+  // Returns the user's goals
   Future<List<Goal>> getGoals() async {
     Database db = await instance.database;
     final List<Map<String, dynamic>> results = await db.query('Goal');
@@ -175,5 +196,15 @@ class DatabaseHelper {
             goal['due_date'] != null ? DateTime.parse(goal['due_date']) : null,
       );
     }).toList();
+  }
+
+  // Returns the balance of the user
+  Future<double> getBalance() async {
+    Database db = await instance.database;
+
+    final List<Map<String, dynamic>> results = await db
+        .rawQuery('SELECT SUM(cost) as balance FROM UserTransaction');
+        
+    return results.isNotEmpty ? (results.first['balance'] ?? 0.0) : 0.0;
   }
 }
