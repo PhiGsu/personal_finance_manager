@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:personal_finance_manager/database.dart';
 import 'package:personal_finance_manager/main.dart';
 import 'package:personal_finance_manager/models/user_transaction.dart';
+import 'package:personal_finance_manager/widgets/spending_analysis_info.dart';
+import 'package:personal_finance_manager/widgets/spending_graph.dart';
 
 class SpendingAnalysisScreen extends StatefulWidget {
   const SpendingAnalysisScreen({super.key});
@@ -138,34 +140,5 @@ class _SpendingAnalysisScreenState extends State<SpendingAnalysisScreen> {
         ),
       ),
     );
-  }
-}
-
-// Displays graph of user's spending
-class SpendingGraph extends StatelessWidget {
-  final List<UserTransaction> transactions;
-
-  const SpendingGraph({super.key, required this.transactions});
-
-  @override
-  Widget build(BuildContext context) {
-    throw UnimplementedError();
-  }
-}
-
-// Displays analysis on the user's spending habits
-class SpendingAnalysisInfo extends StatelessWidget {
-  final List<UserTransaction> transactions;
-  final Map<int, String> categories;
-
-  const SpendingAnalysisInfo({
-    super.key,
-    required this.transactions,
-    required this.categories,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    throw UnimplementedError();
   }
 }
