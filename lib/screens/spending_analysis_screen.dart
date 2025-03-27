@@ -127,7 +127,11 @@ class _SpendingAnalysisScreenState extends State<SpendingAnalysisScreen> {
             ),
             Padding(
               padding: const EdgeInsets.all(8),
-              child: SpendingGraph(transactions: transactions),
+              child: SpendingGraph(
+                transactions: transactions,
+                balance: balance,
+                timePeriod: selectedTimePeriod,
+              ),
             ),
             Padding(
               padding: const EdgeInsets.all(8),
