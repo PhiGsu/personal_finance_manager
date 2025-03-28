@@ -38,20 +38,20 @@ class SpendingGraph extends StatelessWidget {
       required this.timePeriod,
       required this.balance});
 
-  // Group transactions by date and sum their costs
+  // Group transactions by date and sum their amounts
   List<FlSpot> _prepareData() {
-    Map<DateTime, double> dateCostMap = _initializeDateMap();
+    Map<DateTime, double> dateAmountMap = _initializeDateMap();
 
     for (var transaction in transactions) {
       DateTime dateKey = _getDateGroup(transaction.date);
-      if (dateCostMap.containsKey(dateKey)) {
-        dateCostMap[dateKey] = dateCostMap[dateKey]! + transaction.cost;
+      if (dateAmountMap.containsKey(dateKey)) {
+        dateAmountMap[dateKey] = dateAmountMap[dateKey]! + transaction.amount;
       }
     }
 
     // Map entries sorted by date descending
     List<MapEntry<DateTime, double>> sortedEntries =
-        dateCostMap.entries.toList()..sort((a, b) => b.key.compareTo(a.key));
+        dateAmountMap.entries.toList()..sort((a, b) => b.key.compareTo(a.key));
 
     double calculatedBalance = balance;
 
@@ -65,20 +65,20 @@ class SpendingGraph extends StatelessWidget {
   }
 
   Map<DateTime, double> _initializeDateMap() {
-    Map<DateTime, double> dateCostMap = {};
+    Map<DateTime, double> dateAmountMap = {};
     DateTime now = DateTime.now();
     DateTime today = DateTime(now.year, now.month, now.day);
 
     switch (timePeriod) {
       case 'Week':
         for (int i = 0; i < 7; i++) {
-          dateCostMap[today.subtract(Duration(days: i))] = 0.0;
+          dateAmountMap[today.subtract(Duration(days: i))] = 0.0;
         }
         break;
 
       case 'Month':
         for (int i = 0; i < 30; i++) {
-          dateCostMap[today.subtract(Duration(days: i))] = 0.0;
+          dateAmountMap[today.subtract(Duration(days: i))] = 0.0;
         }
         break;
 
@@ -88,7 +88,7 @@ class SpendingGraph extends StatelessWidget {
           if (month.month <= 0) {
             month = DateTime(today.year - 1, 12 + month.month);
           }
-          dateCostMap[DateTime(month.year, month.month)] = 0.0;
+          dateAmountMap[DateTime(month.year, month.month)] = 0.0;
         }
         break;
 
@@ -96,7 +96,7 @@ class SpendingGraph extends StatelessWidget {
         break;
     }
 
-    return dateCostMap;
+    return dateAmountMap;
   }
 
   DateTime _getDateGroup(DateTime date) {

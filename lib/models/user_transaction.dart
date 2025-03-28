@@ -1,13 +1,13 @@
 class UserTransaction {
   final int? id;
   final DateTime date;
-  final double cost;
+  final double amount;
   final String description;
   final int categoryId;
 
   UserTransaction({
     required this.date,
-    required this.cost,
+    required this.amount,
     required this.description,
     required this.categoryId,
     this.id,
@@ -18,7 +18,7 @@ class UserTransaction {
     return {
       'id': id,
       'date': date.toIso8601String().split('T')[0],
-      'cost': cost,
+      'amount': amount,
       'description': description,
       'category_id': categoryId
     };
