@@ -155,16 +155,11 @@ class SpendingGraph extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: SizedBox(
-        width: 500,
         height: 500,
         child: LineChart(
           LineChartData(
-            gridData: FlGridData(
-              show: true,
-              drawVerticalLine: false,
-            ),
+            gridData: const FlGridData(drawVerticalLine: false),
             titlesData: FlTitlesData(
-              show: true,
               topTitles:
                   const AxisTitles(sideTitles: SideTitles(showTitles: false)),
               rightTitles:
@@ -175,6 +170,8 @@ class SpendingGraph extends StatelessWidget {
                   reservedSize: 80,
                   getTitlesWidget: (value, meta) =>
                       Text('\$${value.toStringAsFixed(2)}'),
+                  maxIncluded: false,
+                  minIncluded: false,
                 ),
               ),
               bottomTitles: AxisTitles(
@@ -188,7 +185,6 @@ class SpendingGraph extends StatelessWidget {
                 ),
               ),
             ),
-            borderData: FlBorderData(show: true),
             lineBarsData: [
               LineChartBarData(
                 spots: _prepareData(),

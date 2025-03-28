@@ -33,5 +33,4 @@ class SpendingAnalysisInfo extends StatelessWidget {
   // Lowest gain
 
   // number of transactions
-  // show spending by categories
 }

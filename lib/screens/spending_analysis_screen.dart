@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:personal_finance_manager/database.dart';
 import 'package:personal_finance_manager/main.dart';
 import 'package:personal_finance_manager/models/user_transaction.dart';
+import 'package:personal_finance_manager/widgets/category_bar_graph.dart';
 import 'package:personal_finance_manager/widgets/spending_analysis_info.dart';
 import 'package:personal_finance_manager/widgets/spending_graph.dart';
 
@@ -126,11 +127,42 @@ class _SpendingAnalysisScreenState extends State<SpendingAnalysisScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(8),
-              child: SpendingGraph(
-                transactions: transactions,
-                balance: balance,
-                timePeriod: selectedTimePeriod,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                spacing: 10,
+                children: [
+                  Text(
+                    'Balance Overview',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SpendingGraph(
+                    transactions: transactions,
+                    balance: balance,
+                    timePeriod: selectedTimePeriod,
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                spacing: 10,
+                children: [
+                  Text(
+                    'Spending by Category',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  CategoryBarGraph(
+                    categories: categories,
+                    transactions: transactions,
+                  ),
+                ],
               ),
             ),
             Padding(
