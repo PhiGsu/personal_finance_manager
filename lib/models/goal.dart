@@ -2,15 +2,13 @@ class Goal {
   final int? id;
   final String name;
   final double targetAmount;
-  final double currentAmount;
-  final DateTime? dueDate;
+  double currentAmount;
 
   Goal({
     this.id,
     required this.name,
     required this.targetAmount,
-    required this.currentAmount,
-    this.dueDate,
+    this.currentAmount = 0,
   });
 
   // Used to simplify insertions into the database
@@ -20,7 +18,6 @@ class Goal {
       'name': name,
       'target_amount': targetAmount,
       'current_amount': currentAmount,
-      'due_date': dueDate?.toIso8601String().split('T')[0],
     };
   }
 }

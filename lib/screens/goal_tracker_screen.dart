@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:personal_finance_manager/database.dart';
 import 'package:personal_finance_manager/main.dart';
+import 'package:personal_finance_manager/models/goal.dart';
 
 class GoalTrackerScreen extends StatefulWidget {
   const GoalTrackerScreen({super.key});
@@ -10,9 +12,9 @@ class GoalTrackerScreen extends StatefulWidget {
 }
 
 class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
-  final List<Map<String, dynamic>> _goals = [];
   final _addFormKey = GlobalKey<FormState>();
   final _updateFormKey = GlobalKey<FormState>();
+  List<Goal> _goals = [];
   double totalSavings = 0;
 
   late final TextEditingController titleController;
@@ -25,6 +27,7 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
     titleController = TextEditingController();
     valueController = TextEditingController();
     updateController = TextEditingController();
+    _loadData();
   }
 
   @override
@@ -33,6 +36,13 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
     valueController.dispose();
     updateController.dispose();
     super.dispose();
+  }
+
+  void _loadData() async {
+    final goals = await DatabaseHelper.instance.getGoals();
+    setState(() {
+      _goals = goals;
+    });
   }
 
   void _showAddGoalDialog() {
@@ -88,15 +98,14 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
             TextButton(
               onPressed: () {
                 if (_addFormKey.currentState?.validate() ?? false) {
-                  final title = titleController.text;
-                  final maxValue = double.tryParse(valueController.text) ?? 0;
+                  final goal = Goal(
+                    name: titleController.text,
+                    targetAmount: double.tryParse(valueController.text) ?? 0,
+                  );
                   setState(() {
-                    _goals.add({
-                      "title": title,
-                      "maxValue": maxValue,
-                      "currentValue": 0,
-                    });
+                    _goals.add(goal);
                   });
+                  DatabaseHelper.instance.insert('Goal', goal.toMap());
                   Navigator.of(context).pop();
                 }
               },
@@ -111,7 +120,7 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
     });
   }
 
-  void _showUpdateGoalDialog(Map<String, dynamic> goal) {
+  void _showUpdateGoalDialog(Goal goal) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -151,14 +160,14 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
                 if (_updateFormKey.currentState?.validate() ?? false) {
                   final updateValue =
                       double.tryParse(updateController.text) ?? 0;
+                  final double newValue = (goal.currentAmount + updateValue)
+                      .clamp(0, goal.targetAmount);
                   setState(() {
-                    // Update the current value
-                    final newValue = (goal["currentValue"] + updateValue)
-                        .clamp(0, goal["maxValue"]);
                     // Update the total savings
-                    totalSavings += newValue - goal["currentValue"];
-                    goal["currentValue"] = newValue;
+                    totalSavings += newValue - goal.currentAmount;
+                    goal.currentAmount = newValue;
                   });
+                  DatabaseHelper.instance.update('Goal', goal.toMap());
                   Navigator.of(context).pop();
                 }
               },
@@ -172,7 +181,7 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
     });
   }
 
-  void _showDeleteDialog(Map<String, dynamic> goal) {
+  void _showDeleteDialog(Goal goal) {
     showDialog(
       context: context,
       builder: (context) {
@@ -190,9 +199,10 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
               onPressed: () {
                 Navigator.of(context).pop();
                 setState(() {
-                  totalSavings -= goal["currentValue"];
+                  totalSavings -= goal.currentAmount;
                   _goals.remove(goal);
                 });
+                DatabaseHelper.instance.delete('Goal', goal.id!);
               },
               child: const Text('Delete'),
             ),
@@ -263,7 +273,7 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
             child: SingleChildScrollView(
               child: Column(
                 children: _goals.map((goal) {
-                  final ratio = goal["currentValue"] / goal["maxValue"];
+                  final ratio = goal.currentAmount / goal.targetAmount;
                   return Card(
                     margin: const EdgeInsets.symmetric(
                       vertical: 8.0,
@@ -282,7 +292,7 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                goal["title"],
+                                goal.name,
                                 style: const TextStyle(
                                   fontSize: 18.0,
                                   fontWeight: FontWeight.bold,
@@ -324,7 +334,7 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
                           Align(
                             alignment: Alignment.bottomRight,
                             child: Text(
-                              "\$${goal["currentValue"]}/\$${goal["maxValue"]}",
+                              "\$${goal.currentAmount.toStringAsFixed(2)}/\$${goal.targetAmount.toStringAsFixed(2)}",
                               style: const TextStyle(fontSize: 12.0),
                             ),
                           ),
