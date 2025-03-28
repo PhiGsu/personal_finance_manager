@@ -47,7 +47,7 @@ class TransactionTable extends StatelessWidget {
               columnSpacing: 20,
               columns: const <DataColumn>[
                 DataColumn(label: Text('Date')),
-                DataColumn(label: Text('Cost')),
+                DataColumn(label: Text('Amount')),
                 DataColumn(label: Text('Description')),
                 DataColumn(label: Text('Category')),
               ],
@@ -60,9 +60,9 @@ class TransactionTable extends StatelessWidget {
                       ),
                       DataCell(
                         Text(
-                          transaction.cost < 0
-                              ? '-\$${transaction.cost.abs().toStringAsFixed(2)}'
-                              : '\$${transaction.cost.toStringAsFixed(2)}',
+                          transaction.amount < 0
+                              ? '-\$${transaction.amount.abs().toStringAsFixed(2)}'
+                              : '\$${transaction.amount.toStringAsFixed(2)}',
                         ),
                       ),
                       DataCell(

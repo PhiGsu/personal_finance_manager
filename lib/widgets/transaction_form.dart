@@ -22,7 +22,7 @@ class TransactionForm extends StatefulWidget {
 }
 
 class _TransactionFormState extends State<TransactionForm> {
-  late final TextEditingController costController;
+  late final TextEditingController amountController;
   late final TextEditingController descriptionController;
   late DateTime date;
   int? selectedCategory;
@@ -30,26 +30,26 @@ class _TransactionFormState extends State<TransactionForm> {
   @override
   void initState() {
     super.initState();
-    costController =
-        TextEditingController(text: widget.editTransaction?.cost.toStringAsFixed(2));
+    amountController =
+        TextEditingController(text: widget.editTransaction?.amount.toStringAsFixed(2));
     descriptionController =
         TextEditingController(text: widget.editTransaction?.description);
     date = widget.editTransaction?.date ?? DateTime.now();
     selectedCategory = widget.editTransaction?.categoryId;
 
-    costController.addListener(_onTextChanged);
+    amountController.addListener(_onTextChanged);
     descriptionController.addListener(_onTextChanged);
   }
 
   @override
   void dispose() {
-    costController.dispose();
+    amountController.dispose();
     descriptionController.dispose();
     super.dispose();
   }
 
   void resetForm() {
-    costController.clear();
+    amountController.clear();
     descriptionController.clear();
     setState(() {
       date = DateTime.now();
@@ -62,7 +62,7 @@ class _TransactionFormState extends State<TransactionForm> {
   }
 
   bool _areFieldsValid() {
-    return double.tryParse(costController.text) != null &&
+    return double.tryParse(amountController.text) != null &&
         descriptionController.text.isNotEmpty &&
         selectedCategory != null;
   }
@@ -87,9 +87,9 @@ class _TransactionFormState extends State<TransactionForm> {
               children: [
                 Expanded(
                   child: TextField(
-                    controller: costController,
+                    controller: amountController,
                     decoration: const InputDecoration(
-                      labelText: 'Cost',
+                      labelText: 'Amount',
                       border: OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.numberWithOptions(
@@ -195,7 +195,7 @@ class _TransactionFormState extends State<TransactionForm> {
                         ? () {
                             final newTransaction = UserTransaction(
                               date: date,
-                              cost: double.parse(costController.text),
+                              amount: double.parse(amountController.text),
                               description: descriptionController.text,
                               categoryId: selectedCategory!,
                               id: widget.editTransaction?.id,

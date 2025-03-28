@@ -56,7 +56,7 @@ class DatabaseHelper {
       CREATE TABLE UserTransaction (
         id INTEGER PRIMARY KEY,
         date DATE,
-        cost NUMERIC NOT NULL,
+        amount NUMERIC NOT NULL,
         description TEXT,
         category_id INTEGER,
         FOREIGN KEY (category_id) REFERENCES Category(id)
@@ -154,7 +154,7 @@ class DatabaseHelper {
         .map((transaction) => UserTransaction(
               id: transaction['id'],
               date: DateTime.parse(transaction['date']),
-              cost: (transaction['cost'] as num).toDouble(),
+              amount: (transaction['amount'] as num).toDouble(),
               description: transaction['description'] ?? '',
               categoryId: transaction['category_id'] ?? 0,
             ))
@@ -166,7 +166,7 @@ class DatabaseHelper {
     Database db = await instance.database;
     final List<Map<String, dynamic>> results = await db.query(
       'UserTransaction',
-      where: 'date >= ?',
+      where: 'date > ?',
       whereArgs: [date.toIso8601String().split('T')[0]],
     );
 
@@ -174,7 +174,7 @@ class DatabaseHelper {
         .map((transaction) => UserTransaction(
               id: transaction['id'],
               date: DateTime.parse(transaction['date']),
-              cost: (transaction['cost'] as num).toDouble(),
+              amount: (transaction['amount'] as num).toDouble(),
               description: transaction['description'] ?? '',
               categoryId: transaction['category_id'] ?? 0,
             ))
@@ -203,7 +203,7 @@ class DatabaseHelper {
     Database db = await instance.database;
 
     final List<Map<String, dynamic>> results = await db
-        .rawQuery('SELECT SUM(cost) as balance FROM UserTransaction');
+        .rawQuery('SELECT SUM(amount) as balance FROM UserTransaction');
         
     return results.isNotEmpty ? (results.first['balance'] ?? 0.0) : 0.0;
   }
