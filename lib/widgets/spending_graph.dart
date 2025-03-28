@@ -52,11 +52,13 @@ class SpendingGraph extends StatelessWidget {
     // Map entries sorted by date descending
     List<MapEntry<DateTime, double>> sortedEntries =
         dateCostMap.entries.toList()..sort((a, b) => b.key.compareTo(a.key));
+
     double calculatedBalance = balance;
 
     return sortedEntries.map((entry) {
       FlSpot flSpot = FlSpot(
-          entry.key.millisecondsSinceEpoch.toDouble(), calculatedBalance);
+          sortedEntries.length - sortedEntries.indexOf(entry) - 1,
+          calculatedBalance);
       calculatedBalance -= entry.value;
       return flSpot;
     }).toList();
@@ -104,6 +106,30 @@ class SpendingGraph extends StatelessWidget {
     return DateTime(date.year, date.month, date.day);
   }
 
+  String _getTitleForXAxis(double value) {
+    DateTime today = DateTime.now();
+    DateTime date;
+
+    switch (timePeriod) {
+      case 'Week':
+        date = today.subtract(Duration(days: (6 - value.toInt())));
+        break;
+      case 'Month':
+        date = today.subtract(Duration(days: (29 - value.toInt())));
+        break;
+      case 'Year':
+        date = DateTime(today.year, today.month - (11 - value.toInt()));
+        if (date.month <= 0) {
+          date = DateTime(today.year - 1, 12 + date.month);
+        }
+        break;
+      default:
+        date = today.subtract(Duration(days: value.toInt()));
+    }
+
+    return _formatDate(date);
+  }
+
   String _formatDate(DateTime date) {
     switch (timePeriod) {
       case 'Week':
@@ -118,16 +144,10 @@ class SpendingGraph extends StatelessWidget {
   }
 
   double _getInterval() {
-    switch (timePeriod) {
-      case 'Week':
-        return Duration.millisecondsPerDay.toDouble();
-      case 'Month':
-        return Duration.millisecondsPerDay.toDouble() * 5;
-      case 'Year':
-        return Duration.millisecondsPerDay.toDouble() * 30;
-      default:
-        return Duration.millisecondsPerDay.toDouble();
+    if (timePeriod == 'Month') {
+      return 5;
     }
+    return 1;
   }
 
   @override
@@ -155,20 +175,15 @@ class SpendingGraph extends StatelessWidget {
                   reservedSize: 80,
                   getTitlesWidget: (value, meta) =>
                       Text('\$${value.toStringAsFixed(2)}'),
-                  minIncluded: false,
                 ),
               ),
               bottomTitles: AxisTitles(
                 sideTitles: SideTitles(
                   showTitles: true,
                   reservedSize: 80,
-                  minIncluded: false,
-                  maxIncluded: false,
                   interval: _getInterval(),
                   getTitlesWidget: (value, meta) {
-                    DateTime date =
-                        DateTime.fromMillisecondsSinceEpoch(value.toInt());
-                    return Text(_formatDate(date));
+                    return Text(_getTitleForXAxis(value));
                   },
                 ),
               ),
