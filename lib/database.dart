@@ -48,8 +48,7 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY,
         name TEXT NOT NULL,  
         target_amount NUMERIC NOT NULL,
-        current_amount NUMERIC DEFAULT 0,
-        due_date DATE         
+        current_amount NUMERIC DEFAULT 0
       );''');
 
     await db.execute('''
@@ -192,8 +191,6 @@ class DatabaseHelper {
         name: goal['name'],
         targetAmount: (goal['target_amount'] as num).toDouble(),
         currentAmount: (goal['current_amount'] as num).toDouble(),
-        dueDate:
-            goal['due_date'] != null ? DateTime.parse(goal['due_date']) : null,
       );
     }).toList();
   }
@@ -202,9 +199,9 @@ class DatabaseHelper {
   Future<double> getBalance() async {
     Database db = await instance.database;
 
-    final List<Map<String, dynamic>> results = await db
-        .rawQuery('SELECT SUM(amount) as balance FROM UserTransaction');
-        
+    final List<Map<String, dynamic>> results =
+        await db.rawQuery('SELECT SUM(amount) as balance FROM UserTransaction');
+
     return results.isNotEmpty ? (results.first['balance'] ?? 0.0) : 0.0;
   }
 }

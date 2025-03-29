@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:personal_finance_manager/database.dart';
 import 'package:personal_finance_manager/main.dart';
+import 'package:personal_finance_manager/models/goal.dart';
 
 class GoalTrackerScreen extends StatefulWidget {
   const GoalTrackerScreen({super.key});
@@ -9,31 +12,81 @@ class GoalTrackerScreen extends StatefulWidget {
 }
 
 class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
-  final List<Map<String, dynamic>> _goals = [];
-  double totalSavings = 0; // Tracks the total savings
+  final _addFormKey = GlobalKey<FormState>();
+  final _updateFormKey = GlobalKey<FormState>();
+  List<Goal> _goals = [];
+  double totalSavings = 0;
+
+  late final TextEditingController titleController;
+  late final TextEditingController valueController;
+  late final TextEditingController updateController;
+
+  @override
+  void initState() {
+    super.initState();
+    titleController = TextEditingController();
+    valueController = TextEditingController();
+    updateController = TextEditingController();
+    _loadData();
+  }
+
+  @override
+  void dispose() {
+    titleController.dispose();
+    valueController.dispose();
+    updateController.dispose();
+    super.dispose();
+  }
+
+  void _loadData() async {
+    final goals = await DatabaseHelper.instance.getGoals();
+    setState(() {
+      _goals = goals;
+    });
+  }
 
   void _showAddGoalDialog() {
-    final titleController = TextEditingController();
-    final valueController = TextEditingController();
-
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text("Add a Goal"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: titleController,
-                decoration: const InputDecoration(labelText: "Title"),
-              ),
-              TextField(
-                controller: valueController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: "Max Value"),
-              ),
-            ],
+          content: Form(
+            key: _addFormKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: titleController,
+                  decoration: const InputDecoration(labelText: "Title"),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please enter a title';
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: valueController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: "Max Value"),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d*\.?\d{0,2}')),
+                  ],
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a max value';
+                    }
+                    final maxValue = double.tryParse(value);
+                    if (maxValue == null || maxValue <= 0) {
+                      return 'Please enter a valid number';
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -44,39 +97,56 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
             ),
             TextButton(
               onPressed: () {
-                final title = titleController.text;
-                final maxValue = int.tryParse(valueController.text) ?? 0;
-                if (title.isNotEmpty && maxValue > 0) {
+                if (_addFormKey.currentState?.validate() ?? false) {
+                  final goal = Goal(
+                    name: titleController.text,
+                    targetAmount: double.tryParse(valueController.text) ?? 0,
+                  );
                   setState(() {
-                    _goals.add({
-                      "title": title,
-                      "maxValue": maxValue,
-                      "currentValue": 0,
-                    });
+                    _goals.add(goal);
                   });
+                  DatabaseHelper.instance.insert('Goal', goal.toMap());
+                  Navigator.of(context).pop();
                 }
-                Navigator.of(context).pop();
               },
               child: const Text("Submit"),
             ),
           ],
         );
       },
-    );
+    ).then((_) {
+      titleController.clear();
+      valueController.clear();
+    });
   }
 
-  void _showUpdateGoalDialog(Map<String, dynamic> goal) {
-    final updateController = TextEditingController();
-
+  void _showUpdateGoalDialog(Goal goal) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text("Update Goal"),
-          content: TextField(
-            controller: updateController,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(labelText: "Add/Remove Value"),
+          content: Form(
+            key: _updateFormKey,
+            child: TextFormField(
+              controller: updateController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: "Add/Remove Value",
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^-?\d*\.?\d{0,2}')),
+              ],
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter a value';
+                }
+                if (double.tryParse(value) == null) {
+                  return 'Please enter a valid number';
+                }
+                return null;
+              },
+            ),
           ),
           actions: [
             TextButton(
@@ -87,31 +157,59 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
             ),
             TextButton(
               onPressed: () {
-                final updateValue = int.tryParse(updateController.text) ?? 0;
-                setState(() {
-                  // Update the current value
-                  final newValue = (goal["currentValue"] + updateValue)
-                      .clamp(0, goal["maxValue"]);
-                  // Update the total savings
-                  totalSavings += newValue - goal["currentValue"];
-                  goal["currentValue"] = newValue;
-                });
-                Navigator.of(context).pop();
+                if (_updateFormKey.currentState?.validate() ?? false) {
+                  final updateValue =
+                      double.tryParse(updateController.text) ?? 0;
+                  final double newValue = (goal.currentAmount + updateValue)
+                      .clamp(0, goal.targetAmount);
+                  setState(() {
+                    // Update the total savings
+                    totalSavings += newValue - goal.currentAmount;
+                    goal.currentAmount = newValue;
+                  });
+                  DatabaseHelper.instance.update('Goal', goal.toMap());
+                  Navigator.of(context).pop();
+                }
               },
               child: const Text("Submit"),
             ),
           ],
         );
       },
-    );
+    ).then((_) {
+      updateController.clear();
+    });
   }
 
-  void _deleteGoal(Map<String, dynamic> goal) {
-    setState(() {
-      totalSavings -=
-          goal["currentValue"]; // Subtract currentValue from totalSavings
-      _goals.remove(goal); // Remove the goal from the list
-    });
+  void _showDeleteDialog(Goal goal) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Confirm Deletion'),
+          content: const Text('Are you sure you want to delete this goal?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                setState(() {
+                  totalSavings -= goal.currentAmount;
+                  _goals.remove(goal);
+                });
+                DatabaseHelper.instance.delete('Goal', goal.id!);
+              },
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Color _getBarColor(double ratio) {
@@ -126,11 +224,11 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
 
   Color _getBarOutlineColor(double ratio) {
     if (ratio <= 1 / 3) {
-      return Colors.red; // Dark red outline
+      return Colors.red;
     } else if (ratio <= 2 / 3) {
-      return Colors.yellow; // Dark yellow outline
+      return Colors.yellow;
     } else {
-      return Colors.green; // Dark green outline
+      return Colors.green;
     }
   }
 
@@ -141,7 +239,7 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
       drawer: const FinanceMangerAppDrawer(),
       body: Column(
         children: [
-          const SizedBox(height: 10), // Spacing below AppBar
+          const SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -159,12 +257,11 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 10), // Additional spacing
+          const SizedBox(height: 10),
           Align(
             alignment: Alignment.topRight,
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 60.0), // Increased padding
+              padding: const EdgeInsets.symmetric(horizontal: 60.0),
               child: Text(
                 'Total Savings: \$${totalSavings.toStringAsFixed(2)}',
                 style: const TextStyle(fontWeight: FontWeight.bold),
@@ -176,11 +273,12 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
             child: SingleChildScrollView(
               child: Column(
                 children: _goals.map((goal) {
-                  final ratio = goal["currentValue"] / goal["maxValue"];
+                  final ratio = goal.currentAmount / goal.targetAmount;
                   return Card(
                     margin: const EdgeInsets.symmetric(
-                        vertical: 8.0,
-                        horizontal: 60.0), // Adjusted horizontal margin
+                      vertical: 8.0,
+                      horizontal: 60.0,
+                    ),
                     shape: RoundedRectangleBorder(
                       side: const BorderSide(color: Colors.black, width: 1.0),
                       borderRadius: BorderRadius.circular(12.0),
@@ -194,7 +292,7 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                goal["title"],
+                                goal.name,
                                 style: const TextStyle(
                                   fontSize: 18.0,
                                   fontWeight: FontWeight.bold,
@@ -203,7 +301,7 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
                               IconButton(
                                 icon:
                                     const Icon(Icons.delete, color: Colors.red),
-                                onPressed: () => _deleteGoal(goal),
+                                onPressed: () => _showDeleteDialog(goal),
                               ),
                             ],
                           ),
@@ -236,7 +334,7 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
                           Align(
                             alignment: Alignment.bottomRight,
                             child: Text(
-                              "\$${goal["currentValue"]}/\$${goal["maxValue"]}", // Add '$' before numbers
+                              "\$${goal.currentAmount.toStringAsFixed(2)}/\$${goal.targetAmount.toStringAsFixed(2)}",
                               style: const TextStyle(fontSize: 12.0),
                             ),
                           ),
@@ -246,19 +344,20 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
                             child: ElevatedButton(
                               style: ButtonStyle(
                                 backgroundColor: WidgetStateProperty.all(
-                                    const Color(0xFFDAE8FC)), // Blue background
+                                  const Color(0xFFDAE8FC),
+                                ),
                                 shape: WidgetStateProperty.all(
                                   RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(5),
                                   ),
                                 ),
                                 padding: WidgetStateProperty.all(
-                                    const EdgeInsets.all(
-                                        8.0)), // Proper padding
+                                  const EdgeInsets.all(8.0),
+                                ),
                               ),
                               onPressed: () => _showUpdateGoalDialog(goal),
-                              child: const Icon(Icons.edit,
-                                  color: Colors.black), // Black edit icon
+                              child:
+                                  const Icon(Icons.edit, color: Colors.black),
                             ),
                           ),
                         ],
@@ -273,11 +372,11 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddGoalDialog,
-        child: const Icon(Icons.add),
         backgroundColor: const Color(0xFFDAE8FC),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(5),
         ),
+        child: const Icon(Icons.add),
       ),
     );
   }
