@@ -40,8 +40,10 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
 
   void _loadData() async {
     final goals = await DatabaseHelper.instance.getGoals();
+    final total = goals.fold(0.0, (sum, goal) => sum + goal.currentAmount);
     setState(() {
       _goals = goals;
+      totalSavings = total;
     });
   }
 
@@ -63,6 +65,9 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
                     if (value == null || value.trim().isEmpty) {
                       return 'Please enter a title';
                     }
+                    if (value.length > 50) {
+                      return 'Title must be less than 50 characters';
+                    }
                     return null;
                   },
                 ),
@@ -82,6 +87,9 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
                     if (maxValue == null || maxValue <= 0) {
                       return 'Please enter a valid number';
                     }
+                    if (maxValue >= 100_000_000_000) {
+                      return 'Value cannot exceed 100 billion';
+                    }
                     return null;
                   },
                 ),
@@ -96,16 +104,18 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
               child: const Text("Cancel"),
             ),
             TextButton(
-              onPressed: () {
+              onPressed: () async {
                 if (_addFormKey.currentState?.validate() ?? false) {
                   final goal = Goal(
                     name: titleController.text,
                     targetAmount: double.tryParse(valueController.text) ?? 0,
                   );
+                  int id = await DatabaseHelper.instance
+                      .insert('Goal', goal.toMap());
+                  goal.id = id;
                   setState(() {
                     _goals.add(goal);
                   });
-                  DatabaseHelper.instance.insert('Goal', goal.toMap());
                   Navigator.of(context).pop();
                 }
               },
@@ -291,11 +301,15 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                goal.name,
-                                style: const TextStyle(
-                                  fontSize: 18.0,
-                                  fontWeight: FontWeight.bold,
+                              Flexible(
+                                child: Text(
+                                  goal.name,
+                                  style: const TextStyle(
+                                    fontSize: 18.0,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  softWrap: true,
+                                  overflow: TextOverflow.visible,
                                 ),
                               ),
                               IconButton(

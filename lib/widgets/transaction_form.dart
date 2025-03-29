@@ -30,8 +30,8 @@ class _TransactionFormState extends State<TransactionForm> {
   @override
   void initState() {
     super.initState();
-    amountController =
-        TextEditingController(text: widget.editTransaction?.amount.toStringAsFixed(2));
+    amountController = TextEditingController(
+        text: widget.editTransaction?.amount.toStringAsFixed(2));
     descriptionController =
         TextEditingController(text: widget.editTransaction?.description);
     date = widget.editTransaction?.date ?? DateTime.now();
@@ -100,6 +100,20 @@ class _TransactionFormState extends State<TransactionForm> {
                       FilteringTextInputFormatter.allow(
                         RegExp(r'^-?[0-9]*(\.[0-9]{0,2})?$'),
                       ),
+                      TextInputFormatter.withFunction((oldValue, newValue) {
+                        if (newValue.text.isEmpty ||
+                            newValue.text == '-' ||
+                            newValue.text == '.') {
+                          return newValue;
+                        }
+                        final double? parsedValue =
+                            double.tryParse(newValue.text);
+                        if (parsedValue == null ||
+                            parsedValue.abs() > 100_000_000_000) {
+                          return oldValue;
+                        }
+                        return newValue;
+                      }),
                     ],
                   ),
                 ),

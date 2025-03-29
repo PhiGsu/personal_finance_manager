@@ -1,5 +1,5 @@
 class Goal {
-  final int? id;
+  int? id;
   final String name;
   final double targetAmount;
   double currentAmount;
