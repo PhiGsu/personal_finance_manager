@@ -170,6 +170,7 @@ class _SpendingAnalysisScreenState extends State<SpendingAnalysisScreen> {
               child: SpendingAnalysisInfo(
                 transactions: transactions,
                 categories: categories,
+                timePeriod: selectedTimePeriod,
               ),
             ),
           ],
