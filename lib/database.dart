@@ -160,13 +160,17 @@ class DatabaseHelper {
         .toList();
   }
 
-  // Returns transactions after a certain date
-  Future<List<UserTransaction>> getTransactionsAfterDate(DateTime date) async {
+  // Returns transactions between a start date and an end date (inclusive)
+  Future<List<UserTransaction>> getTransactionsBetweenDates(
+      DateTime startDate, DateTime endDate) async {
     Database db = await instance.database;
+    final String start = startDate.toIso8601String().split('T')[0];
+    final String end = endDate.toIso8601String().split('T')[0];
+
     final List<Map<String, dynamic>> results = await db.query(
       'UserTransaction',
-      where: 'date > ?',
-      whereArgs: [date.toIso8601String().split('T')[0]],
+      where: 'date BETWEEN ? AND ?',
+      whereArgs: [start, end],
     );
 
     return results

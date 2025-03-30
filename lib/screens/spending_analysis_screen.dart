@@ -44,20 +44,20 @@ class _SpendingAnalysisScreenState extends State<SpendingAnalysisScreen> {
     DateTime startDate;
     switch (timePeriod) {
       case 'Week':
-        startDate = DateTime.now().subtract(Duration(days: 7));
+        startDate = DateTime.now().subtract(Duration(days: 6));
         break;
       case 'Month':
-        startDate = DateTime.now().subtract(Duration(days: 30));
+        startDate = DateTime.now().subtract(Duration(days: 29));
         break;
       case 'Year':
-        startDate = DateTime.now().subtract(Duration(days: 365));
+        startDate = DateTime.now().subtract(Duration(days: 364));
         break;
       default:
-        startDate = DateTime.now().subtract(Duration(days: 7));
+        startDate = DateTime.now().subtract(Duration(days: 6));
     }
 
     final filteredTransactions =
-        await DatabaseHelper.instance.getTransactionsAfterDate(startDate);
+        await DatabaseHelper.instance.getTransactionsBetweenDates(startDate, DateTime.now());
 
     setState(() {
       transactions = filteredTransactions;

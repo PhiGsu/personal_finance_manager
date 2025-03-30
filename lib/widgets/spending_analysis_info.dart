@@ -131,47 +131,193 @@ class SpendingAnalysisInfo extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 16),
-            Text('Total Spent: \$${_calculateTotalSpent().toStringAsFixed(2)}'),
-            Text(
-                'Total Gained: \$${_calculateTotalGained().toStringAsFixed(2)}'),
+            Row(
+              children: [
+                Text(
+                  'Total Spent: ',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  '\$${_calculateTotalSpent().toStringAsFixed(2)}',
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                Text(
+                  'Total Gained: ',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  '\$${_calculateTotalGained().toStringAsFixed(2)}',
+                ),
+              ],
+            ),
             const SizedBox(height: 16),
-            Text('Week Changes:'),
             Text(
-                ' - Income Change: ${_formatAmount(_calculateWeekChanges(forIncome: true))}'),
-            Text(
-                ' - Spending Change: ${_formatAmount(_calculateWeekChanges(forIncome: false))}'),
+              'Week Changes:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            Row(
+              children: [
+                Text(
+                  ' - Income Change: ',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  _formatAmount(_calculateWeekChanges(forIncome: true)),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                Text(
+                  ' - Spending Change: ',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  _formatAmount(_calculateWeekChanges(forIncome: false)),
+                ),
+              ],
+            ),
             if (timePeriod != 'Week') ...[
               const SizedBox(height: 16),
-              Text('Month Changes:'),
               Text(
-                  ' - Income Change: ${_formatAmount(_calculateMonthChanges(forIncome: true))}'),
-              Text(
-                  ' - Spending Change: ${_formatAmount(_calculateMonthChanges(forIncome: false))}'),
+                'Month Changes:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Row(
+                children: [
+                  Text(
+                    ' - Income Change: ',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    _formatAmount(_calculateMonthChanges(forIncome: true)),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  Text(
+                    ' - Spending Change: ',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    _formatAmount(_calculateMonthChanges(forIncome: false)),
+                  ),
+                ],
+              ),
             ],
             if (timePeriod == 'Year') ...[
               const SizedBox(height: 16),
-              Text('Year Changes:'),
               Text(
-                  ' - Income Change: ${_formatAmount(_calculateYearChanges(forIncome: true))}'),
-              Text(
-                  ' - Spending Change: ${_formatAmount(_calculateYearChanges(forIncome: false))}'),
+                'Year Changes:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Row(
+                children: [
+                  Text(
+                    ' - Income Change: ',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    _formatAmount(_calculateYearChanges(forIncome: true)),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  Text(
+                    ' - Spending Change: ',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    _formatAmount(_calculateYearChanges(forIncome: false)),
+                  ),
+                ],
+              ),
             ],
             const SizedBox(height: 16),
-            Text(
-                'Average Spending: \$${_calculateAverageSpending().toStringAsFixed(2)}'),
-            Text(
-                'Average Income: \$${_calculateAverageIncome().toStringAsFixed(2)}'),
+            Row(
+              children: [
+                Text(
+                  'Average Spending: ',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  '\$${_calculateAverageSpending().toStringAsFixed(2)}',
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                Text(
+                  'Average Income: ',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  '\$${_calculateAverageIncome().toStringAsFixed(2)}',
+                ),
+              ],
+            ),
             const SizedBox(height: 16),
-            Text(
-                'Largest Spending: ${largestSpending != null ? _formatAmount(largestSpending.amount) : 'N/A'}'),
-            Text(
-                'Lowest Spending: ${lowestSpending != null ? _formatAmount(lowestSpending.amount) : 'N/A'}'),
-            Text(
-                'Largest Gain: ${largestGain != null ? _formatAmount(largestGain.amount) : 'N/A'}'),
-            Text(
-                'Lowest Gain: ${lowestGain != null ? _formatAmount(lowestGain.amount) : 'N/A'}'),
+            Row(
+              children: [
+                Text(
+                  'Largest Spending: ',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  largestSpending != null ? _formatAmount(largestSpending.amount) : 'N/A',
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                Text(
+                  'Lowest Spending: ',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  lowestSpending != null ? _formatAmount(lowestSpending.amount) : 'N/A',
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                Text(
+                  'Largest Gain: ',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  largestGain != null ? _formatAmount(largestGain.amount) : 'N/A',
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                Text(
+                  'Lowest Gain: ',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  lowestGain != null ? _formatAmount(lowestGain.amount) : 'N/A',
+                ),
+              ],
+            ),
             const SizedBox(height: 16),
-            Text('Number of Transactions: ${transactions.length}'),
+            Row(
+              children: [
+                Text(
+                  'Number of Transactions: ',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  '${transactions.length}',
+                ),
+              ],
+            ),
           ],
         ),
       ),
