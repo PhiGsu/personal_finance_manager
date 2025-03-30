@@ -21,12 +21,12 @@ class CategoryBarGraph extends StatelessWidget {
     Map<int, double> categoryTotalMap = {};
 
     for (var transaction in transactions) {
-      if (categoryTotalMap.containsKey(transaction.categoryId)) {
-        categoryTotalMap[transaction.categoryId] =
-            categoryTotalMap[transaction.categoryId]! + transaction.amount;
-      } else {
-        categoryTotalMap[transaction.categoryId] = transaction.amount;
-      }
+      // Only process negative amounts (spending)
+      if (transaction.amount > 0) continue;
+
+      categoryTotalMap[transaction.categoryId] =
+          (categoryTotalMap[transaction.categoryId] ?? 0.0) -
+              transaction.amount;
     }
 
     return categoryTotalMap;
