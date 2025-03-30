@@ -110,13 +110,12 @@ class _GoalTrackerScreenState extends State<GoalTrackerScreen> {
                     name: titleController.text,
                     targetAmount: double.tryParse(valueController.text) ?? 0,
                   );
-                  int id = await DatabaseHelper.instance
+                  Navigator.of(context).pop();
+                  goal.id = await DatabaseHelper.instance
                       .insert('Goal', goal.toMap());
-                  goal.id = id;
                   setState(() {
                     _goals.add(goal);
                   });
-                  Navigator.of(context).pop();
                 }
               },
               child: const Text("Submit"),
