@@ -63,7 +63,7 @@ class _TransactionFormState extends State<TransactionForm> {
 
   bool _areFieldsValid() {
     return double.tryParse(amountController.text) != null &&
-        descriptionController.text.isNotEmpty &&
+        descriptionController.text.trim().isNotEmpty &&
         selectedCategory != null;
   }
 
@@ -97,15 +97,18 @@ class _TransactionFormState extends State<TransactionForm> {
                       decimal: true,
                     ),
                     inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.allow(
-                        RegExp(r'^-?[0-9]*(\.[0-9]{0,2})?$'),
-                      ),
                       TextInputFormatter.withFunction((oldValue, newValue) {
                         if (newValue.text.isEmpty ||
                             newValue.text == '-' ||
                             newValue.text == '.') {
                           return newValue;
                         }
+
+                        final regExp = RegExp(r'^-?\d*(\.\d{0,2})?$');
+                        if (!regExp.hasMatch(newValue.text)) {
+                          return oldValue; 
+                        }
+
                         final double? parsedValue =
                             double.tryParse(newValue.text);
                         if (parsedValue == null ||
