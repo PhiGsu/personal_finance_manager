@@ -206,6 +206,6 @@ class DatabaseHelper {
     final List<Map<String, dynamic>> results =
         await db.rawQuery('SELECT SUM(amount) as balance FROM UserTransaction');
 
-    return results.isNotEmpty ? (results.first['balance'] ?? 0.0) : 0.0;
+    return results.isNotEmpty ? (results.first['balance'] as num).toDouble() : 0.0;
   }
 }

@@ -166,7 +166,7 @@ class _SpendingAnalysisScreenState extends State<SpendingAnalysisScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.fromLTRB(8, 0, 8, 30),
               child: SpendingAnalysisInfo(
                 transactions: transactions,
                 categories: categories,
