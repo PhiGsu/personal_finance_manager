@@ -16,3 +16,8 @@ Personal Finance Manager is a mobile app designed to help users efficiently mana
 ## Members
 - Phi Le
 - Anthony Chong
+
+## Presentation
+- [Slides](https://docs.google.com/presentation/d/1m5it9O2-tw8N5Pi1XYVq-bTAR948u3CmDT5Cpu4GPjs/edit?usp=sharing)
+- [Video](https://youtu.be/BDgqIWeHpRQ)
+- [Bonus](https://www.youtube.com/watch?v=dQw4w9WgXcQ&ab_channel=RickAstley)
