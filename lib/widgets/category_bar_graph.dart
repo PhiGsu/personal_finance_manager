@@ -76,7 +76,12 @@ class CategoryBarGraph extends StatelessWidget {
                   showTitles: true,
                   reservedSize: 80,
                   getTitlesWidget: (value, meta) {
-                    return Text(categories[value]!);
+                    String title = categories[value]!;
+                    if (title.length > 6) {
+                      title = '${title.substring(0, 6)}.';
+                    }
+
+                    return Text(title);
                   },
                 ),
               ),
